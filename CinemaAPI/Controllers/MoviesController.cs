@@ -1,6 +1,8 @@
-﻿using CinemaAPI.Models;
+﻿using CinemaAPI.Data;
+using CinemaAPI.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace CinemaAPI.Controllers
 {
@@ -8,36 +10,87 @@ namespace CinemaAPI.Controllers
     [ApiController]
     public class MoviesController : ControllerBase
     {
-        private List<Movie> movies = new List<Movie>
-        {
-            new Movie{Id = 0 , Name = "AOT"},
-            new Movie {Id = 1 ,Name = "War of Justice"}
-        };
+        private readonly CinemaDbContext _cinemaDbContext;
 
+        public MoviesController(CinemaDbContext cinemaDbContext)
+        {
+            _cinemaDbContext = cinemaDbContext;
+        }
+
+        // GET: api/<MoviesController>
         [HttpGet]
-        public IEnumerable<Movie> Get()
+        public async Task<IActionResult> Get()
         {
-            return movies;
+            return Ok(await _cinemaDbContext.Movies.ToListAsync());
         }
 
+        // GET api/<MoviesController>/5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(long id)
+        {
+            var currentMovie = await _cinemaDbContext.Movies.FindAsync(id);
+
+            if (currentMovie == null) return NotFound();
+
+            return Ok(currentMovie);
+        }
+
+        // POST api/<MoviesController>
         [HttpPost]
-        public void Post([FromBody] Movie movie)
+        public async Task<IActionResult> Post([FromBody] Movie movie)
         {
-            movies.Add(movie);
+            try
+            {
+                _cinemaDbContext.Movies.Add(movie);
+                await _cinemaDbContext.SaveChangesAsync();
+
+                return Created(HttpContext.Request.Scheme, movie);
+            }
+            catch (System.Exception x)
+            {
+                return BadRequest(x.InnerException?.Message ?? x.Message);
+            }
         }
 
+        // PUT api/<MoviesController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] Movie movie)
+        public async Task<IActionResult> Put(long id, [FromBody] Movie movie)
         {
-            movies[id] = movie;
+            try
+            {
+                var currentMovie = await _cinemaDbContext.Movies.FindAsync(id);
+
+                currentMovie.Name = movie.Name;
+                currentMovie.Language = movie.Language;
+
+                _cinemaDbContext.Movies.Update(currentMovie);
+                await _cinemaDbContext.SaveChangesAsync();
+
+                return Ok();
+            }
+            catch (System.Exception x)
+            {
+                return BadRequest(x.InnerException?.Message ?? x.Message);
+            }
         }
 
-        [HttpDelete]
-        public void Delete(long id)
+        // DELETE api/<MoviesController>/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(long id)
         {
-            var currentMovie = movies.Find(item => item.Id == id);
+            try
+            {
+                var currentMovie = await _cinemaDbContext.Movies.FindAsync(id);
 
-            movies.Remove(currentMovie);
+                _cinemaDbContext.Movies.Remove(currentMovie);
+                await _cinemaDbContext.SaveChangesAsync();
+
+                return Ok();
+            }
+            catch (System.Exception x)
+            {
+                return BadRequest(x.InnerException?.Message ?? x.Message);
+            }
         }
     }
 }
