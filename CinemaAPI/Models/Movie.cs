@@ -1,5 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Http;
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
 
 namespace CinemaAPI.Models
 {
@@ -16,5 +19,14 @@ namespace CinemaAPI.Models
 
         [Column(TypeName = "decimal(18,1)")]
         public double Rate { get; set; }
+
+        [MaxLength(1000)]
+        public string ImageURL { get; set; }
+
+        [NotMapped]
+        public IFormFile Image { get; set; }
+
+        public string GetDefaultPath(string fileName = "")
+            => Path.Combine("wwwroot/Movies", !string.IsNullOrEmpty(fileName) ? fileName : $"{Guid.NewGuid()}.jpg");
     }
 }

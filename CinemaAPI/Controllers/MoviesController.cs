@@ -2,6 +2,7 @@
 using CinemaAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace CinemaAPI.Controllers
@@ -36,11 +37,37 @@ namespace CinemaAPI.Controllers
         }
 
         // POST api/<MoviesController>
+        //[HttpPost]
+        //public async Task<IActionResult> Post([FromBody] Movie movie)
+        //{
+        //    try
+        //    {
+        //        _cinemaDbContext.Movies.Add(movie);
+        //        await _cinemaDbContext.SaveChangesAsync();
+
+        //        return Created(HttpContext.Request.Scheme, movie);
+        //    }
+        //    catch (System.Exception x)
+        //    {
+        //        return BadRequest(x.InnerException?.Message ?? x.Message);
+        //    }
+        //}
+
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Movie movie)
+        public async Task<IActionResult> Post([FromForm] Movie movie)
         {
             try
             {
+                if (movie.Image != null)
+                {
+                    using (var fileStream = new FileStream(movie.GetDefaultPath(), FileMode.Create))
+                    {
+                        await movie.Image.CopyToAsync(fileStream);
+
+                        movie.ImageURL = movie.GetDefaultPath();
+                    }
+                }
+
                 _cinemaDbContext.Movies.Add(movie);
                 await _cinemaDbContext.SaveChangesAsync();
 
@@ -54,7 +81,7 @@ namespace CinemaAPI.Controllers
 
         // PUT api/<MoviesController>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(long id, [FromBody] Movie movie)
+        public async Task<IActionResult> Put(long id, [FromForm] Movie movie)
         {
             try
             {
@@ -62,6 +89,17 @@ namespace CinemaAPI.Controllers
 
                 currentMovie.Name = movie.Name;
                 currentMovie.Language = movie.Language;
+                currentMovie.Rate = movie.Rate;
+
+                if (movie.Image != null)
+                {
+                    using (var fileStream = new FileStream(movie.GetDefaultPath(), FileMode.Create))
+                    {
+                        await movie.Image.CopyToAsync(fileStream);
+
+                        currentMovie.ImageURL = movie.GetDefaultPath();
+                    }
+                }
 
                 _cinemaDbContext.Movies.Update(currentMovie);
                 await _cinemaDbContext.SaveChangesAsync();
