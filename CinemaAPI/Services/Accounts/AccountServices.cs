@@ -1,7 +1,6 @@
 ﻿using AuthenticationPlugin;
 using CinemaAPI.Data;
 using CinemaAPI.DTOs;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -25,7 +24,7 @@ namespace CinemaAPI.Services.Accounts
             _auth = new AuthService(_configuration);
         }
 
-        public async Task<(bool, string, ObjectResult)> Login(UserLoginDto userLoginDto)
+        public async Task<(bool, string, object)> Login(UserLoginDto userLoginDto)
         {
             try
             {
@@ -39,11 +38,12 @@ namespace CinemaAPI.Services.Accounts
                 var claims = new[] {
                                new Claim(JwtRegisteredClaimNames.Email, userExists.Email),
                                new Claim(ClaimTypes.Email, userExists.Email),
+                               new Claim(ClaimTypes.Role , userExists.Role)
                              };
 
                 var token = _auth.GenerateAccessToken(claims);
 
-                var result = new ObjectResult(new
+                var result = new
                 {
                     access_token = token.AccessToken,
                     expires_in = token.ExpiresIn,
@@ -51,7 +51,7 @@ namespace CinemaAPI.Services.Accounts
                     creation_Time = token.ValidFrom,
                     expiration_Time = token.ValidTo,
                     user_id = userExists.Id
-                });
+                };
 
                 return (true, string.Empty, result);
             }

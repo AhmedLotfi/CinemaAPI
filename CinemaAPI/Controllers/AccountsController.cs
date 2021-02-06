@@ -65,6 +65,6 @@ namespace CinemaAPI.Controllers
             return await _cinemaDbContext.User.AnyAsync(user => user.Email.Equals(email));
         }
 
-        private string GetDefaultUserRole() => "USERS";
+        private string GetDefaultUserRole() => AppRoles.UserRole;
     }
 }

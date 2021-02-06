@@ -1,5 +1,6 @@
 ﻿using CinemaAPI.Data;
 using CinemaAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
@@ -9,6 +10,7 @@ namespace CinemaAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class MoviesController : ControllerBase
     {
         private readonly CinemaDbContext _cinemaDbContext;
@@ -20,6 +22,7 @@ namespace CinemaAPI.Controllers
 
         // GET: api/<MoviesController>
         [HttpGet]
+        [Authorize(Roles = AppRoles.UserRole)]
         public async Task<IActionResult> Get()
         {
             return Ok(await _cinemaDbContext.Movies.ToListAsync());
