@@ -1,5 +1,6 @@
 ﻿using AuthenticationPlugin;
 using AutoMapper;
+using CinemaAPI.BaseControllers;
 using CinemaAPI.Data;
 using CinemaAPI.DTOs;
 using CinemaAPI.Models;
@@ -11,9 +12,7 @@ using System.Threading.Tasks;
 
 namespace CinemaAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AccountsController : ControllerBase
+    public class AccountsController : AnonymouseBaseController
     {
         private readonly CinemaDbContext _cinemaDbContext;
         private readonly IAccountServices _accountServices;

@@ -1,137 +1,58 @@
-﻿using CinemaAPI.Data;
+﻿using CinemaAPI.BaseControllers;
+using CinemaAPI.DTOs.Movies;
 using CinemaAPI.Models;
+using CinemaAPI.Services.Movies;
+using CinemaAPI.Utilites;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace CinemaAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
-    public class MoviesController : ControllerBase
+    public class MoviesController : AuthBaseController
     {
-        private readonly CinemaDbContext _cinemaDbContext;
+        private readonly IMoviesService _moviesService;
 
-        public MoviesController(CinemaDbContext cinemaDbContext)
+        public MoviesController(IMoviesService moviesService)
         {
-            _cinemaDbContext = cinemaDbContext;
+            _moviesService = moviesService;
         }
 
         // GET: api/<MoviesController>
         [HttpGet]
-        [Authorize(Roles = AppRoles.UserRole)]
-        public async Task<IActionResult> Get()
+        public async Task<APIResponse> Get()
         {
-            return Ok(await _cinemaDbContext.Movies.ToListAsync());
+            return await _moviesService.GetAll();
         }
 
         // GET api/<MoviesController>/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(long id)
+        public async Task<APIResponse> Get(long id)
         {
-            var currentMovie = await _cinemaDbContext.Movies.FindAsync(id);
-
-            if (currentMovie == null) return NotFound();
-
-            return Ok(currentMovie);
+            return await _moviesService.GetById(id);
         }
-
-        // POST api/<MoviesController>
-        //[HttpPost]
-        //public async Task<IActionResult> Post([FromBody] Movie movie)
-        //{
-        //    try
-        //    {
-        //        _cinemaDbContext.Movies.Add(movie);
-        //        await _cinemaDbContext.SaveChangesAsync();
-
-        //        return Created(HttpContext.Request.Scheme, movie);
-        //    }
-        //    catch (System.Exception x)
-        //    {
-        //        return BadRequest(x.InnerException?.Message ?? x.Message);
-        //    }
-        //}
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromForm] Movie movie)
+        [Authorize(Roles = AppRoles.AdminRole)]
+        public async Task<APIResponse> Post([FromForm] CreateMovieDto createMovieDto)
         {
-            try
-            {
-                if (movie.Image != null)
-                {
-                    using (var fileStream = new FileStream(movie.GetDefaultPath(), FileMode.Create))
-                    {
-                        await movie.Image.CopyToAsync(fileStream);
-
-                        movie.ImageURL = movie.GetDefaultPath();
-                    }
-                }
-
-                _cinemaDbContext.Movies.Add(movie);
-                await _cinemaDbContext.SaveChangesAsync();
-
-                return Created(HttpContext.Request.Scheme, movie);
-            }
-            catch (System.Exception x)
-            {
-                return BadRequest(x.InnerException?.Message ?? x.Message);
-            }
+            return await _moviesService.Post(createMovieDto);
         }
 
-        // PUT api/<MoviesController>/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(long id, [FromForm] Movie movie)
+        // PUT api/<MoviesController>
+        [HttpPut]
+        [Authorize(Roles = AppRoles.AdminRole)]
+        public async Task<APIResponse> Put([FromForm] EditMovieDto editMovieDto)
         {
-            try
-            {
-                var currentMovie = await _cinemaDbContext.Movies.FindAsync(id);
-
-                currentMovie.Name = movie.Name;
-                currentMovie.Language = movie.Language;
-                currentMovie.Rate = movie.Rate;
-
-                if (movie.Image != null)
-                {
-                    using (var fileStream = new FileStream(movie.GetDefaultPath(), FileMode.Create))
-                    {
-                        await movie.Image.CopyToAsync(fileStream);
-
-                        currentMovie.ImageURL = movie.GetDefaultPath();
-                    }
-                }
-
-                _cinemaDbContext.Movies.Update(currentMovie);
-                await _cinemaDbContext.SaveChangesAsync();
-
-                return Ok();
-            }
-            catch (System.Exception x)
-            {
-                return BadRequest(x.InnerException?.Message ?? x.Message);
-            }
+            return await _moviesService.Put(editMovieDto);
         }
 
         // DELETE api/<MoviesController>/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(long id)
+        [Authorize(Roles = AppRoles.AdminRole)]
+        public async Task<APIResponse> Delete(long id)
         {
-            try
-            {
-                var currentMovie = await _cinemaDbContext.Movies.FindAsync(id);
-
-                _cinemaDbContext.Movies.Remove(currentMovie);
-                await _cinemaDbContext.SaveChangesAsync();
-
-                return Ok();
-            }
-            catch (System.Exception x)
-            {
-                return BadRequest(x.InnerException?.Message ?? x.Message);
-            }
+            return await _moviesService.Delete(id);
         }
     }
 }

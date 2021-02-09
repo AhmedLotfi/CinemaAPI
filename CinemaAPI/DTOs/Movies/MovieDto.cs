@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CinemaAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CinemaAPI.Models
+namespace CinemaAPI.DTOs.Movies
 {
-    public class Movie
+    public class MovieDto
     {
         public long Id { get; set; }
 
@@ -43,9 +42,6 @@ namespace CinemaAPI.Models
         public double TicketPrice { get; set; }
 
         public double Rate { get; set; }
-
-        [NotMapped]
-        public IFormFile Image { get; set; }
 
         public virtual ICollection<Reservation> Reservations { get; set; }
     }

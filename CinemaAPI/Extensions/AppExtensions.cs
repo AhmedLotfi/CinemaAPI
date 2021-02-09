@@ -2,6 +2,7 @@
 using CinemaAPI.Data;
 using CinemaAPI.MappingProfiles;
 using CinemaAPI.Services.Accounts;
+using CinemaAPI.Services.Movies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -50,6 +51,7 @@ namespace CinemaAPI.Extensions
         public static void ResolveAppServices(this IServiceCollection services)
         {
             services.AddTransient<IAccountServices, AccountServices>();
+            services.AddTransient<IMoviesService, MoviesService>();
         }
     }
 }
