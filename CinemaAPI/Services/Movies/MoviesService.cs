@@ -64,7 +64,7 @@ namespace CinemaAPI.Services.Movies
                         return APIResponse.GetAPIResponse(
                                 (int)HttpStatusCode.OK,
                                 string.Empty,
-                                _mapper.Map<GetAllMovieDto>(data);
+                                _mapper.Map<GetAllMovieDto>(data));
                 }
 
             }

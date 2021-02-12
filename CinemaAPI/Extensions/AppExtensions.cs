@@ -3,6 +3,7 @@ using CinemaAPI.Data;
 using CinemaAPI.MappingProfiles;
 using CinemaAPI.Services.Accounts;
 using CinemaAPI.Services.Movies;
+using CinemaAPI.Services.Reservations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -52,6 +53,7 @@ namespace CinemaAPI.Extensions
         {
             services.AddTransient<IAccountServices, AccountServices>();
             services.AddTransient<IMoviesService, MoviesService>();
+            services.AddTransient<IReservationService, ReservationService>();
         }
     }
 }
