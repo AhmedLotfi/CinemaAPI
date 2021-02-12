@@ -6,6 +6,7 @@ using CinemaAPI.Utilites;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -31,6 +32,41 @@ namespace CinemaAPI.Services.Movies
                 var mappedData = _mapper.Map<GetAllMovieDto>(data);
 
                 return APIResponse.GetAPIResponse((int)HttpStatusCode.OK, string.Empty, mappedData);
+            }
+            catch (Exception x)
+            {
+                return APIResponse.GetAPIResponse((int)HttpStatusCode.BadRequest, x.InnerException?.Message ?? x.Message, null);
+            }
+        }
+
+        public async Task<APIResponse> GetAll(string search, string sort = "desc", int pageNumber = 1, int pageSize = 5)
+        {
+            try
+            {
+                var data = _cinemaDbContext.Movies.Where(movie => string.IsNullOrEmpty(search) || movie.Name.Contains(search));
+
+                data = data.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+                switch (sort)
+                {
+                    case "desc":
+                        return APIResponse.GetAPIResponse(
+                            (int)HttpStatusCode.OK,
+                            string.Empty,
+                            _mapper.Map<GetAllMovieDto>(await data.OrderByDescending(movie => movie.Rate).ToListAsync()));
+                    case "asc":
+                        return APIResponse.GetAPIResponse(
+                            (int)HttpStatusCode.OK,
+                            string.Empty,
+                            _mapper.Map<GetAllMovieDto>(await data.OrderByDescending(movie => movie.Rate).ToListAsync()));
+
+                    default:
+                        return APIResponse.GetAPIResponse(
+                                (int)HttpStatusCode.OK,
+                                string.Empty,
+                                _mapper.Map<GetAllMovieDto>(data);
+                }
+
             }
             catch (Exception x)
             {
@@ -130,5 +166,6 @@ namespace CinemaAPI.Services.Movies
 
         private string GetDefaultMoviePath(string fileName = "")
              => Path.Combine("wwwroot/Movies", !string.IsNullOrEmpty(fileName) ? fileName : $"{Guid.NewGuid()}.jpg");
+
     }
 }

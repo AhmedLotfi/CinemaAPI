@@ -25,6 +25,13 @@ namespace CinemaAPI.Controllers
             return await _moviesService.GetAll();
         }
 
+        [HttpGet]
+        [Route(nameof(GetPagged))]
+        public async Task<APIResponse> GetPagged(string search, string sort = "desc", int pageNumber = 1, int pageSize = 5)
+        {
+            return await _moviesService.GetAll(search, sort, pageNumber, pageSize);
+        }
+
         // GET api/<MoviesController>/5
         [HttpGet("{id}")]
         public async Task<APIResponse> Get(long id)

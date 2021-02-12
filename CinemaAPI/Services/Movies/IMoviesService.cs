@@ -8,6 +8,8 @@ namespace CinemaAPI.Services.Movies
     {
         Task<APIResponse> GetAll();
 
+        Task<APIResponse> GetAll(string search, string sort = "desc", int pageNumber = 1, int pageSize = 5);
+
         Task<APIResponse> GetById(long id);
 
         Task<APIResponse> Post(CreateMovieDto createMovieDto);
