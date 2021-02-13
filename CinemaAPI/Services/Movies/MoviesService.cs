@@ -3,8 +3,10 @@ using CinemaAPI.Data;
 using CinemaAPI.DTOs.Movies;
 using CinemaAPI.Models;
 using CinemaAPI.Utilites;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -14,12 +16,14 @@ namespace CinemaAPI.Services.Movies
 {
     public class MoviesService : IMoviesService
     {
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly CinemaDbContext _cinemaDbContext;
         private readonly IMapper _mapper;
 
-        public MoviesService(CinemaDbContext cinemaDbContext, IMapper mapper)
+        public MoviesService(CinemaDbContext cinemaDbContext, IMapper mapper, IWebHostEnvironment webHostEnvironment)
         {
             _cinemaDbContext = cinemaDbContext;
+            _webHostEnvironment = webHostEnvironment;
             _mapper = mapper;
         }
 
@@ -29,7 +33,7 @@ namespace CinemaAPI.Services.Movies
             {
                 var data = await _cinemaDbContext.Movies.ToListAsync();
 
-                var mappedData = _mapper.Map<GetAllMovieDto>(data);
+                var mappedData = _mapper.Map<IReadOnlyList<GetAllMovieDto>>(data);
 
                 return APIResponse.GetAPIResponse((int)HttpStatusCode.OK, string.Empty, mappedData);
             }
@@ -53,18 +57,18 @@ namespace CinemaAPI.Services.Movies
                         return APIResponse.GetAPIResponse(
                             (int)HttpStatusCode.OK,
                             string.Empty,
-                            _mapper.Map<GetAllMovieDto>(await data.OrderByDescending(movie => movie.Rate).ToListAsync()));
+                            _mapper.Map<IReadOnlyList<GetAllMovieDto>>(await data.OrderByDescending(movie => movie.Rate).ToListAsync()));
                     case "asc":
                         return APIResponse.GetAPIResponse(
                             (int)HttpStatusCode.OK,
                             string.Empty,
-                            _mapper.Map<GetAllMovieDto>(await data.OrderByDescending(movie => movie.Rate).ToListAsync()));
+                            _mapper.Map<IReadOnlyList<GetAllMovieDto>>(await data.OrderByDescending(movie => movie.Rate).ToListAsync()));
 
                     default:
                         return APIResponse.GetAPIResponse(
                                 (int)HttpStatusCode.OK,
                                 string.Empty,
-                                _mapper.Map<GetAllMovieDto>(data));
+                                _mapper.Map<IReadOnlyList<GetAllMovieDto>>(data));
                 }
 
             }
@@ -96,11 +100,13 @@ namespace CinemaAPI.Services.Movies
             {
                 if (createMovieDto.Image != null)
                 {
-                    using (var fileStream = new FileStream(GetDefaultMoviePath(), FileMode.Create))
+                    string path = GetDefaultMoviePath();
+
+                    using (var fileStream = new FileStream(path, FileMode.Create))
                     {
                         await createMovieDto.Image.CopyToAsync(fileStream);
 
-                        createMovieDto.ImageURL = GetDefaultMoviePath();
+                        createMovieDto.ImageURL = Path.GetRelativePath(_webHostEnvironment.WebRootPath, path);
                     }
                 }
 
@@ -125,11 +131,13 @@ namespace CinemaAPI.Services.Movies
 
                 if (editMovieDto.Image != null)
                 {
-                    using (var fileStream = new FileStream(GetDefaultMoviePath(), FileMode.Create))
+                    string path = GetDefaultMoviePath();
+
+                    using (var fileStream = new FileStream(path, FileMode.Create))
                     {
                         await editMovieDto.Image.CopyToAsync(fileStream);
 
-                        editMovieDto.ImageURL = GetDefaultMoviePath();
+                        editMovieDto.ImageURL = Path.GetRelativePath(_webHostEnvironment.WebRootPath, path);
                     }
                 }
 
@@ -165,7 +173,8 @@ namespace CinemaAPI.Services.Movies
         }
 
         private string GetDefaultMoviePath(string fileName = "")
-             => Path.Combine("wwwroot/Movies", !string.IsNullOrEmpty(fileName) ? fileName : $"{Guid.NewGuid()}.jpg");
-
+        {
+            return Path.Combine($"{_webHostEnvironment.WebRootPath}/Movies", !string.IsNullOrEmpty(fileName) ? fileName : $"{Guid.NewGuid()}.jpg");
+        }
     }
 }
